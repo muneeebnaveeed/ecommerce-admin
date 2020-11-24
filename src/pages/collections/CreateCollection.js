@@ -5,29 +5,7 @@ import { Loader } from '../../components/Loader';
 import _ from 'lodash';
 import { useDispatch } from 'react-redux';
 import * as stateActions from '../../redux/stateActions';
-
-const titleValidation = {
-    empty: {
-        message: 'Title cannot be empty',
-    },
-    min: {
-        length: 3,
-        message: 'Minimum of 3 characters are required',
-    },
-    max: {
-        length: 155,
-        message: 'No more than 155 characters are allowed',
-    },
-};
-
-const validate = (input, { empty, min, max }) => {
-    const len = input.length;
-    if (input == null || len <= 0) return empty.message;
-    if (len < min.length) return min.message;
-    if (len > max.length) return max.message;
-
-    return '';
-};
+import { titleValidation } from '../../constants/validation';
 
 const CreateCollection = (props) => {
     const dispatch = useDispatch();
@@ -87,7 +65,7 @@ const CreateCollection = (props) => {
     };
 
     const handleTitleValidation = () => {
-        const error = validate(inputTitle?.trim(), titleValidation);
+        const error = titleValidation.validate(inputTitle?.trim());
         if (error) {
             setInputTitleError(error);
             if (resetErrorTimeout.current) clearTimeout(resetErrorTimeout.current);

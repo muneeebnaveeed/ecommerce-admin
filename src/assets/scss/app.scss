@@ -110,6 +110,20 @@ File: Main Css File
 /* 23. Authentication */
 @import 'custom/pages/authentication';
 
+.feedback {
+    width: 100%;
+    margin-top: 0.25rem;
+    font-size: 80%;
+
+    &.invalid {
+        color: $danger;
+    }
+
+    &.valid {
+        color: $green;
+    }
+}
+
 @import 'custom/components/custom/collections.scss';
 @import 'custom/components/custom/Collection.scss';
 @import 'custom/components/custom/products.scss';
