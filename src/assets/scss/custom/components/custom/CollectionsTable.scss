@@ -1,0 +1,10 @@
+[data-component='CollectionsTable'] {
+    .button-icon {
+        cursor: pointer;
+        transition: opacity 300ms ease;
+    }
+
+    .button-icon:hover {
+        opacity: 0.2;
+    }
+}

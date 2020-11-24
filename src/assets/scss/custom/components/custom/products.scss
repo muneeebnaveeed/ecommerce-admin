@@ -1,0 +1,95 @@
+[data-component='Products'] {
+    position: absolute;
+    top: calc(100% + 24px);
+    left: 0;
+
+    width: 100%;
+    z-index: 3;
+
+    transform: scaleY(0);
+    transform-style: flat;
+    transform-origin: top;
+    transition: transform 300ms ease;
+
+    max-height: 1240px;
+    overflow-x: hidden;
+    overflow-y: scroll;
+
+    display: flex;
+    flex-direction: column;
+
+    &.extended {
+        // height: max-content;
+        transform: scaleY(1);
+    }
+
+    .title {
+        // width: 100%;
+        text-align: center;
+        color: white;
+        font-weight: bold;
+        background-color: #323742;
+        margin: 0;
+        padding: 1.5rem 0;
+        font-size: 2.1875rem;
+        text-transform: capitalize;
+    }
+
+    .product {
+        display: flex;
+        transition: background-color 300ms ease;
+
+        .content {
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            justify-content: space-between;
+
+            border-bottom: 1px solid rgba(#323742, 0.1);
+
+            &.last {
+                border-bottom: transparent;
+            }
+
+            .sku,
+            .type,
+            .price {
+                text-transform: uppercase;
+                font-size: 0.6rem;
+                font-weight: 700;
+                letter-spacing: 1px;
+            }
+
+            .badge {
+                margin-right: 0.235rem;
+                display: inline-block;
+            }
+
+            .created-on {
+                font-size: 0.875rem;
+                color: #6e768e;
+                font-weight: 600;
+                margin-top: 0;
+            }
+
+            .sku,
+            .type {
+                margin: 0;
+            }
+
+            .button-icon {
+                cursor: pointer;
+                transition: opacity 300ms ease;
+            }
+
+            .button-icon:hover {
+                opacity: 0.2;
+            }
+        }
+    }
+
+    .product:hover {
+        background-color: rgba(#f3f4f7, 0.5);
+    }
+}

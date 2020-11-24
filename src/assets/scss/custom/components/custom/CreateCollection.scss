@@ -1,0 +1,40 @@
+[data-component='CreateCollection'] {
+    .submit-button {
+        height: 39px;
+        min-width: 132px;
+        margin-top: 0.5rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .feedback {
+        width: 100%;
+        margin-top: 0.25rem;
+        font-size: 80%;
+
+        &.invalid {
+            color: $danger;
+        }
+
+        &.valid {
+            color: $green;
+        }
+    }
+    @media (max-width: 1200px) {
+        .collection-form {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .submit-button {
+            margin-top: 0;
+        }
+    }
+
+    @media (min-width: 1200px) {
+        .submit-button {
+            display: block;
+            width: 100%;
+        }
+    }
+}
