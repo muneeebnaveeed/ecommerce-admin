@@ -1,0 +1,17 @@
+[data-component='BlackOverlay'] {
+    pointer-events: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: black;
+    opacity: 0;
+    transition: opacity 300ms ease;
+
+    z-index: 10;
+
+    &.visible {
+        opacity: 0.1;
+    }
+}

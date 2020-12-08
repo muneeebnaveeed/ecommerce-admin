@@ -24,6 +24,25 @@ export const getProductsByCollection = {
     cached: {
         key: 'getProductsByCollection',
         header: 'collections',
-        // pre: (_id, )
+    },
+};
+
+export const getTags = {
+    key: 'GET_TAGS',
+    method: 'get',
+    url: '/tags',
+    cached: {
+        key: 'tags',
+        header: 'tags',
+    },
+};
+
+export const getProductsByTag = {
+    key: 'GET_PRODUCTS_BY_TAG',
+    method: 'get',
+    url: '/products/tag',
+    cached: {
+        key: 'getProductsByTag',
+        header: 'tags',
     },
 };

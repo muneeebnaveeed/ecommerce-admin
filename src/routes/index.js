@@ -14,6 +14,7 @@ const Confirm = React.lazy(() => import('../pages/auth/Confirm'));
 // dashboard
 const Dashboard = React.lazy(() => import('../pages/dashboard'));
 const Collections = React.lazy(() => import('../pages/collections'));
+const TagsTypes = React.lazy(() => import('../pages/tags'));
 // apps
 const CalendarApp = React.lazy(() => import('../pages/apps/Calendar'));
 const EmailInbox = React.lazy(() => import('../pages/apps/Email/Inbox'));
@@ -106,6 +107,15 @@ const collectionsRoute = {
     name: 'Collections',
     icon: FeatherIcon.Activity,
     component: Collections,
+    roles: ['Admin'],
+    route: PrivateRoute,
+};
+
+const tagsTypesRoute = {
+    path: '/tagstypes',
+    name: 'Tags and Types',
+    icon: FeatherIcon.Activity,
+    component: TagsTypes,
     roles: ['Admin'],
     route: PrivateRoute,
 };
@@ -431,6 +441,7 @@ const allRoutes = [
     rootRoute,
     dashboardRoute,
     collectionsRoute,
+    tagsTypesRoute,
     ...appRoutes,
     pagesRoutes,
     componentsRoutes,
@@ -443,6 +454,7 @@ const allRoutes = [
 const authProtectedRoutes = [
     dashboardRoute,
     collectionsRoute,
+    tagsTypesRoute,
     ...appRoutes,
     pagesRoutes,
     componentsRoutes,

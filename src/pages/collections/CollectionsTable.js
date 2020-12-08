@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useContext, useCallback, useEffect, useRef, useState } from 'react';
 import {
     Card,
     CardBody,
@@ -13,37 +13,37 @@ import {
     InputGroupAddon,
     Input,
 } from 'reactstrap';
-import { getCollections } from '../../constants';
-import useFetch from '../../helpers/fetch';
 import _ from 'lodash';
-import ErrorDialog from './ErrorDialog';
-import Loader from '../../components/Loader';
+import ErrorDialog from '../../components/ErrorDialog';
+import Loader, { Loader as ButtonLoader } from '../../components/Loader';
 import { Edit, Delete } from 'react-feather';
 import api from '../../helpers/api';
 import * as stateActions from '../../redux/stateActions';
 import { useDispatch } from 'react-redux';
 import TooltipContainer from 'react-tooltip';
-import { titleValidation } from '../../constants/validation';
+import { collectionValidation } from '../../constants/validation';
+
+import { useFormik } from 'formik';
+
+import { getCollections, collectionsCache } from 'helpers/query';
+import { queryCache, usePaginatedQuery } from 'react-query';
+import { CollectionsContext } from 'helpers/context';
 
 const EditCollectionModal = ({ isOpen, toggle, collection }) => {
-    const dispatch = useDispatch();
-
-    const [inputTitle, setInputTitle] = useState('');
     const [inputTitleError, setInputTitleError] = useState('');
     const [isEditingCollection, setIsEditingCollection] = useState(false);
-    const [feedback, setFeedback] = useState('');
+
+    const { reviewContext, tableContext } = useContext(CollectionsContext);
 
     const resetErrorTimeout = useRef(null);
-    const resetFeedbackTimeout = useRef(null);
 
     const toggleModal = () => {
-        if (inputTitle != '') setInputTitle('');
-        if (inputTitleError != '') setInputTitleError('');
+        if (inputTitleError !== '') setInputTitleError('');
         toggle();
     };
 
-    const editCollection = async () => {
-        if (inputTitle.trim() == collection.title) {
+    const editCollection = async (title) => {
+        if (title.trim() === collection.title) {
             setInputTitleError('Please set a new title');
             if (resetErrorTimeout.current) clearTimeout(resetErrorTimeout.current);
             resetErrorTimeout.current = setTimeout(() => {
@@ -55,32 +55,30 @@ const EditCollectionModal = ({ isOpen, toggle, collection }) => {
 
         setIsEditingCollection(true);
         try {
-            await api.put(`/collections/${collection._id}`, { title: inputTitle });
-            // dispatch(
-            //     stateActions.createToast({
-            //         type: 'success',
-            //         title: 'Dispatched Successfully!',
-            //         message: 'Collection has been edited',
-            //     })
-            // );
+            const updatedCollection = { _id: collection._id, title };
+            await api.put(`/collections/${collection._id}`, updatedCollection);
 
-            setFeedback('Collection has been edited successfully');
+            const reviewData = reviewContext.getReviewData();
+            const tableData = tableContext.getTableData();
 
-            if (resetFeedbackTimeout.current) clearTimeout(resetFeedbackTimeout.current);
-            resetFeedbackTimeout.current = setTimeout(() => {
-                setFeedback('');
-                resetFeedbackTimeout.current = null;
-            }, 1500);
+            collectionsCache.review.edit({
+                queryKey: reviewData.queryKey,
+                pageSize: reviewData.pageSize,
+                collection: updatedCollection,
+            });
+
+            const isSameQuery = JSON.stringify(reviewData.queryKey) == JSON.stringify(tableData.queryKey);
+
+            if (!isSameQuery)
+                collectionsCache.table.edit({
+                    queryKey: tableData.queryKey,
+                    pageSize: tableData.pageSize,
+                    collection: updatedCollection,
+                });
+            toggleModal();
         } catch (error) {
             let toastError = error.message;
             if (error.response) toastError = error.response.data.value;
-            // dispatch(
-            //     stateActions.createToast({
-            //         type: 'danger',
-            //         title: 'Oh noes!',
-            //         message: 'Failed to edit collection: ' + toastError,
-            //     })
-            // );
             setInputTitleError(toastError);
             if (resetErrorTimeout.current) clearTimeout(resetErrorTimeout.current);
             resetErrorTimeout.current = setTimeout(() => {
@@ -92,51 +90,71 @@ const EditCollectionModal = ({ isOpen, toggle, collection }) => {
         }
     };
 
-    const handleTitleChange = (event) => setInputTitle(event.target.value);
-    const handleTitleValidation = () => {
-        const error = titleValidation.validate(inputTitle?.trim());
+    const handleValidation = (values) => {
+        let errors = {};
+        const error = collectionValidation.title.validate(values.title?.trim());
         if (error) {
-            setInputTitleError(error);
+            errors.title = error;
+            setInputTitleError(errors.title);
             if (resetErrorTimeout.current) clearTimeout(resetErrorTimeout.current);
             resetErrorTimeout.current = setTimeout(() => {
                 setInputTitleError('');
                 resetErrorTimeout.current = null;
             }, 1500);
-            return false;
+        } else {
+            if (inputTitleError) setInputTitleError('');
+            if (resetErrorTimeout.current) {
+                clearTimeout(resetErrorTimeout.current);
+                resetErrorTimeout.current = null;
+            }
         }
-        return true;
+        return errors;
     };
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        const isValid = handleTitleValidation();
 
-        if (isValid) {
-            setInputTitleError('');
-            editCollection();
-        }
+    const handleSubmit = (values) => {
+        editCollection(values.title);
     };
+
+    const formik = useFormik({
+        initialValues: {
+            title: collection.title,
+        },
+        enableReinitialize: true,
+        onSubmit: handleSubmit,
+        validate: handleValidation,
+    });
+
+    useEffect(() => {
+        if (isOpen) formik.setValues({ title: collection?.title || '' });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isOpen]);
+
     return (
         <Modal isOpen={isOpen} toggle={toggleModal} className="modal-dialog-centered" size="sm">
             <ModalHeader toggle={toggleModal}>Edit Collection</ModalHeader>
             <ModalBody>
-                <Form className="collection-form align-items-start" autoComplete="off" inline>
+                <Form
+                    onSubmit={formik.handleSubmit}
+                    className="collection-form align-items-start"
+                    autoComplete="off"
+                    inline>
                     <InputGroup className="flex-grow-1">
                         <InputGroupAddon addonType="prepend">Title</InputGroupAddon>
                         <Input
+                            autoFocus
                             invalid={Boolean(inputTitleError)}
                             type="text"
                             name="title"
-                            onChange={handleTitleChange}
-                            value={inputTitle}
+                            onChange={formik.handleChange}
+                            value={formik.values.title}
                         />
                     </InputGroup>
                 </Form>
                 {inputTitleError && <p className="feedback invalid">{inputTitleError}</p>}
-                {feedback && <p className="feedback valid">{feedback}</p>}
             </ModalBody>
             <ModalFooter>
-                <Button color="primary" onClick={handleSubmit}>
-                    Edit Collection
+                <Button color="primary" className="loader-button" onClick={formik.handleSubmit}>
+                    {!isEditingCollection ? 'Edit Collection' : <ButtonLoader />}
                 </Button>
                 <Button color="secondary" className="ml-1" onClick={toggleModal}>
                     Cancel
@@ -146,47 +164,36 @@ const EditCollectionModal = ({ isOpen, toggle, collection }) => {
     );
 };
 
-const CollectionsTable = (props) => {
-    const [fetchCollections, isCollectionsLoading, collections, collectionsError, resetCollections] = useFetch(
-        getCollections,
-        {
-            isCached: true,
-        }
-    );
+const CollectionsTable = () => {
+    const { tableContext, reviewContext } = useContext(CollectionsContext);
+    const collections = usePaginatedQuery(tableContext.getQueryKey(), getCollections, { retry: false });
 
+    // useful for showing loader on table
     const [isDeletingCollection, setIsDeletingCollection] = useState(false);
 
-    const [srCollections, setSrCollections] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editCollection, setEditCollection] = useState(null);
+
+    // passing selected collection to modal
+    const currentCollection = useRef('');
 
     const dispatch = useDispatch();
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    useEffect(() => {
-        fetchCollections(null, { isCached: true });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    useEffect(() => {
-        const srColl = _.map(collections, (collection, index) => ({ ...collection, sr: index + 1 }));
-        setSrCollections(srColl);
-    }, [collections]);
 
     const toggleModal = useCallback(() => {
         setIsModalOpen((prevState) => !prevState);
     }, [setIsModalOpen]);
 
-    const handleEditCollection = async (collection) => {
-        setEditCollection(collection);
-        toggleModal();
-    };
+    const handleEditCollection = useCallback(
+        (collection) => {
+            currentCollection.current = collection;
+            toggleModal();
+        },
+        [toggleModal]
+    );
 
-    const handleDeleteCollection = async (id) => {
+    const handleDeleteCollection = async ({ id, sr }) => {
         setIsDeletingCollection(true);
         try {
             await api.delete(`/collections/${id}`);
-            dispatch(stateActions.removeFromCache(id, 'collections', 'collections'));
             dispatch(
                 stateActions.createToast({
                     type: 'success',
@@ -194,6 +201,15 @@ const CollectionsTable = (props) => {
                     message: 'Collection deleted successfully',
                 })
             );
+
+            // update collections table
+            collectionsCache.table.remove();
+            const page = reviewContext.currentPage.value,
+                pageSize = reviewContext.pageSize.value,
+                queryKey = reviewContext.getQueryKey();
+
+            // update review collections
+            collectionsCache.review.remove({ id, sr, page, pageSize, queryKey });
         } catch (error) {
             let toastError = error.message;
             if (error.response) toastError = error.response.data.value;
@@ -204,9 +220,9 @@ const CollectionsTable = (props) => {
                     message: 'Unable to delete collection: ' + toastError,
                 })
             );
-        } finally {
-            setIsDeletingCollection(false);
         }
+
+        setIsDeletingCollection(false);
     };
 
     return (
@@ -214,9 +230,9 @@ const CollectionsTable = (props) => {
             <Card data-component="CollectionsTable">
                 <CardBody>
                     <h4>Manage Collections</h4>
-                    {(isCollectionsLoading || isDeletingCollection) && <Loader />}
-                    <ErrorDialog error={collectionsError} onRetry={() => fetchCollections(null, { isCached: true })} />
-                    {!collectionsError && !isCollectionsLoading && (
+                    {(collections.isLoading || isDeletingCollection) && <Loader />}
+                    <ErrorDialog error={collections.error} onRetry={() => collections.refetch()} />
+                    {!collections.error && !collections.isLoading && (
                         <Table>
                             <thead>
                                 <tr>
@@ -227,7 +243,7 @@ const CollectionsTable = (props) => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {_.map(srCollections, ({ _id, sr, title, products }, index) => (
+                                {_.map(collections.data?.docs, ({ _id, sr, title, products }, index) => (
                                     <tr key={`tabular-collection-${index + 1}`}>
                                         <td>{sr}</td>
                                         <td>{title}</td>
@@ -241,23 +257,24 @@ const CollectionsTable = (props) => {
                                             />
                                             <Delete
                                                 data-tip="Delete Collection"
-                                                onClick={() => handleDeleteCollection(_id)}
+                                                data-place="top"
+                                                onClick={() => handleDeleteCollection({ id: _id, sr })}
                                                 className="button-icon"
                                                 color="#e83e8c"
                                             />
-                                            <TooltipContainer type="dark" effect="solid" />
                                         </td>
                                     </tr>
                                 ))}
                             </tbody>
                         </Table>
                     )}
-                    {!srCollections.length && !collectionsError && (
+                    {!collections.data?.docs?.length && !collections.error && (
                         <p className="text-center">No Collections Recorded</p>
                     )}
+                    <TooltipContainer type="dark" effect="solid" />
                 </CardBody>
             </Card>
-            <EditCollectionModal isOpen={isModalOpen} toggle={toggleModal} collection={editCollection} />
+            <EditCollectionModal isOpen={isModalOpen} toggle={toggleModal} collection={currentCollection.current} />
         </React.Fragment>
     );
 };

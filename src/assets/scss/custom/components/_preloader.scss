@@ -1,4 +1,4 @@
-// 
+//
 // preloader.scss
 //
 
@@ -9,7 +9,7 @@
     right: 0;
     bottom: 0;
     background-color: rgba($white, 0.75);
-    z-index: 9999;
+    z-index: 9;
 }
 
 .status {
@@ -39,11 +39,13 @@
     }
 }
 
-
 @keyframes circle-loader {
-    0%, 80%, 100% { 
+    0%,
+    80%,
+    100% {
         transform: scale(0.4);
-    } 40% { 
-        transform: scale(1.0);
+    }
+    40% {
+        transform: scale(1);
     }
 }

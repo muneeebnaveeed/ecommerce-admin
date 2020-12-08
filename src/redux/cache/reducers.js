@@ -1,6 +1,12 @@
 import _ from 'lodash';
 
-const { UPDATE_CACHE_KEY, UPDATE_CACHE_HEADER, REMOVE_CACHE_KEY, REMOVE_FROM_CACHE } = require('./actions');
+const {
+    UPDATE_CACHE_KEY,
+    UPDATE_CACHE_HEADER,
+    REMOVE_CACHE_KEY,
+    REMOVE_FROM_CACHE,
+    UPDATE_CACHE_VALUE,
+} = require('./actions');
 const initialState = {};
 
 const cacheReducer = (state = initialState, action) => {
@@ -51,9 +57,30 @@ const cacheReducer = (state = initialState, action) => {
                     [key]: updatedKeyData,
                 },
             };
-            console.log(oldKeyData, updatedKeyData);
             return updatedState;
         }
+
+        case UPDATE_CACHE_VALUE: {
+            const { header, key, id, data } = action.payload;
+            const oldKeyData = state[header][key];
+            const oldIdData = oldKeyData[id];
+            const updatedKeyData = {
+                ...oldKeyData,
+                [id]: {
+                    ...oldIdData,
+                    ...data,
+                },
+            };
+            const updatedState = {
+                ...state,
+                [header]: {
+                    ...state[header],
+                    [key]: updatedKeyData,
+                },
+            };
+            return updatedState;
+        }
+
         default: {
             return state;
         }

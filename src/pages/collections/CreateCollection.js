@@ -1,16 +1,16 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { Button, Card, CardBody, Form, Input, InputGroup, InputGroupAddon } from 'reactstrap';
 import api from '../../helpers/api';
 import { Loader } from '../../components/Loader';
 import _ from 'lodash';
-import { useDispatch } from 'react-redux';
-import * as stateActions from '../../redux/stateActions';
-import { titleValidation } from '../../constants/validation';
+import { collectionValidation } from '../../constants/validation';
+import { useFormik } from 'formik';
+import { CollectionsContext } from 'helpers/context';
+import { collectionsCache } from 'helpers/query';
+import { queryCache } from 'react-query';
 
-const CreateCollection = (props) => {
-    const dispatch = useDispatch();
-
-    const [inputTitle, setInputTitle] = useState('');
+const CreateCollection = () => {
+    const { reviewContext, tableContext } = useContext(CollectionsContext);
     const [inputTitleError, setInputTitleError] = useState('');
     const [feedback, setFeedback] = useState('');
     const [isCreatingCollection, setIsCreatingCollection] = useState(false);
@@ -18,19 +18,30 @@ const CreateCollection = (props) => {
     const resetErrorTimeout = useRef(null);
     const resetFeedbackTimeout = useRef(null);
 
-    const createCollection = async () => {
+    const handleValidation = (formValues) => {
+        let errors = {};
+        const error = collectionValidation.title.validate(formValues.title?.trim());
+        if (error) {
+            errors.title = error;
+            setInputTitleError(errors.title);
+            if (resetErrorTimeout.current) clearTimeout(resetErrorTimeout.current);
+            resetErrorTimeout.current = setTimeout(() => {
+                setInputTitleError('');
+                resetErrorTimeout.current = null;
+            }, 1500);
+        } else {
+            if (resetErrorTimeout.current) {
+                clearTimeout(resetErrorTimeout.current);
+                resetErrorTimeout.current = null;
+            }
+        }
+        return errors;
+    };
+
+    const createCollection = async (title) => {
         try {
             setIsCreatingCollection(true);
-            const request = await api.post('/collections', { title: inputTitle });
-
-            const newCollection = {
-                ...request.data,
-                title: inputTitle,
-            };
-
-            dispatch(
-                stateActions.updateKeyInCache('collections', 'collections', { [newCollection._id]: newCollection })
-            );
+            const request = await api.post('/collections', { title });
 
             setFeedback('Collection created successfully');
             if (resetFeedbackTimeout.current) clearTimeout(resetFeedbackTimeout.current);
@@ -38,55 +49,63 @@ const CreateCollection = (props) => {
                 setFeedback('');
                 resetFeedbackTimeout.current = null;
             }, 2000);
-        } catch (error) {
-            if (error.response) {
-                setInputTitleError(error.response.data.value);
-                if (resetErrorTimeout.current) clearTimeout(resetErrorTimeout.current);
-                resetErrorTimeout.current = setTimeout(() => {
-                    setInputTitleError('');
-                    resetErrorTimeout.current = null;
-                }, 1500);
-                return;
-            }
-            setInputTitleError(error.message);
-            if (resetErrorTimeout.current) clearTimeout(resetErrorTimeout.current);
-            resetErrorTimeout.current = setTimeout(() => {
-                setInputTitleError('');
-                resetErrorTimeout.current = null;
-            }, 1500);
-        } finally {
+
             setIsCreatingCollection(false);
-        }
-    };
 
-    const handleTitleChange = (event) => {
-        const input = event.target.value;
-        setInputTitle(input);
-    };
+            const newCollection = {
+                ...request.data,
+                title,
+            };
 
-    const handleTitleValidation = () => {
-        const error = titleValidation.validate(inputTitle?.trim());
-        if (error) {
-            setInputTitleError(error);
+            const tableData = tableContext.getTableData();
+            const reviewData = reviewContext.getReviewData();
+
+            // update in table
+
+            collectionsCache.table.add({
+                queryKey: tableData.queryKey,
+                pageSize: tableData.pageSize,
+                collection: newCollection,
+            });
+
+            const isSameQuery = JSON.stringify(tableData.queryKey) == JSON.stringify(reviewData.queryKey);
+
+            // if queries are different, then update in review
+
+            if (!isSameQuery)
+                collectionsCache.review.add({
+                    queryKey: reviewData.queryKey,
+                    pageSize: reviewData.pageSize,
+                    collection: newCollection,
+                });
+
+            formik.resetForm();
+        } catch (error) {
+            if (error.response) setInputTitleError(error.response.data.value);
+            else setInputTitleError(error.message);
             if (resetErrorTimeout.current) clearTimeout(resetErrorTimeout.current);
             resetErrorTimeout.current = setTimeout(() => {
                 setInputTitleError('');
                 resetErrorTimeout.current = null;
             }, 1500);
-            return false;
         }
-        return true;
+
+        setIsCreatingCollection(false);
     };
 
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        const isValid = handleTitleValidation();
-
-        if (isValid) {
-            setInputTitleError('');
-            createCollection();
-        }
+    const handleSubmit = (values) => {
+        setInputTitleError('');
+        createCollection(values.title);
     };
+
+    const formik = useFormik({
+        initialValues: {
+            title: '',
+        },
+        enableReinitialize: true,
+        onSubmit: handleSubmit,
+        validate: handleValidation,
+    });
 
     useEffect(() => {
         return () => {
@@ -99,22 +118,27 @@ const CreateCollection = (props) => {
         <Card data-component="CreateCollection">
             <CardBody>
                 <h4>Create New Collection</h4>
-                <Form onSubmit={handleSubmit} className="collection-form align-items-start" autoComplete="off" inline>
+                <Form
+                    onSubmit={formik.handleSubmit}
+                    className="collection-form align-items-start"
+                    autoComplete="off"
+                    inline>
                     <InputGroup className="flex-grow-1">
                         <InputGroupAddon addonType="prepend">Title</InputGroupAddon>
                         <Input
                             invalid={Boolean(inputTitleError)}
                             type="text"
                             name="title"
-                            onChange={handleTitleChange}
-                            value={inputTitle}
+                            id="title"
+                            onChange={formik.handleChange}
+                            value={formik.values.title}
                         />
 
                         {inputTitleError && <p className="feedback invalid">{inputTitleError}</p>}
                         {feedback && <p className="feedback valid">{feedback}</p>}
                     </InputGroup>
 
-                    <Button color="primary" className="submit-button">
+                    <Button type="submit" color="primary" className="submit-button loader-button">
                         {!isCreatingCollection ? 'Create Collection' : <Loader />}
                     </Button>
                 </Form>

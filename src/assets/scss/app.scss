@@ -124,9 +124,83 @@ File: Main Css File
     }
 }
 
+.loader-button {
+    height: 39px;
+    min-width: 132px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.card--performing {
+    img,
+    .overlay {
+        border-radius: 0.25rem;
+    }
+
+    img {
+        height: $performing-height;
+        object-fit: cover;
+        object-position: center;
+    }
+
+    .overlay {
+        width: 100%;
+        height: $performing-height;
+        background-image: linear-gradient(to bottom right, rgba(232, 67, 147, 0.25), rgba(253, 149, 199, 1)),
+            linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 1));
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+
+    .content {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: $performing-height;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        h1 {
+            font-weight: bold;
+            color: white;
+            text-align: center;
+        }
+    }
+}
+
+.card--review {
+    min-height: 200px;
+
+    .collections-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .button-icon {
+        cursor: pointer;
+        transition: opacity 300ms ease;
+
+        &.disabled {
+            cursor: not-allowed;
+            opacity: 0.2;
+        }
+    }
+
+    .button-icon:hover {
+        opacity: 0.2;
+    }
+}
+
 @import 'custom/components/custom/collections.scss';
 @import 'custom/components/custom/Collection.scss';
 @import 'custom/components/custom/products.scss';
 @import 'custom/components/custom/CreateCollection.scss';
 @import 'custom/components/custom/ToastContainer.scss';
 @import 'custom/components/custom/CollectionsTable.scss';
+@import 'custom/components/custom/BlackOverlay.scss';

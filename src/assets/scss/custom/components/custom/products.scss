@@ -4,14 +4,14 @@
     left: 0;
 
     width: 100%;
-    z-index: 3;
+    z-index: 10;
 
     transform: scaleY(0);
     transform-style: flat;
     transform-origin: top;
     transition: transform 300ms ease;
 
-    max-height: 1240px;
+    max-height: 440px;
     overflow-x: hidden;
     overflow-y: scroll;
 

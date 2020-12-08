@@ -1,11 +1,6 @@
 [data-component='CreateCollection'] {
     .submit-button {
-        height: 39px;
-        min-width: 132px;
         margin-top: 0.5rem;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
     }
 
     @media (max-width: 1200px) {

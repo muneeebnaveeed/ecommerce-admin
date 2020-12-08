@@ -6,7 +6,7 @@ const ErrorDialog = ({ data, error, onRetry, goBack = false, onGoBack }) =>
     !data && (
         <div className="text-center">
             <h6>
-                <b>Unable to load:</b> {error}
+                <b>Unable to load:</b> {error.message}
             </h6>
             <Button onClick={onRetry} color="danger" block>
                 Retry

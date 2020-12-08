@@ -1,67 +1,32 @@
-import React from 'react';
-import { Card, Badge } from 'reactstrap';
-import _ from 'lodash';
-import classnames from 'classnames';
-import moment from 'moment';
-import { CURRENCY } from '../../constants';
-import * as FeatherIcons from 'react-feather';
+import React, { useEffect } from 'react';
+import DropdownPanel from '../../components/DropdownPanel';
 
-const Products = ({ collection, products = [] }) => {
-    return (
-        <Card
-            data-component="Products"
-            className={classnames({
-                extended: products != null,
-            })}>
-            <h4 className="title">{collection}</h4>
-            {products?.length ? (
-                _.map(products, ({ title, price, date, type, sku, tags, orders, wishlist }, index) => (
-                    <div key={`product-${index + 1}`} className="product">
-                        <img alt={title} src="https://via.placeholder.com/300x300" width="200" />
-                        <div className={classnames('content', { last: index === products.length - 1 })}>
-                            <div>
-                                <div className="w-100 d-flex justify-content-between align-items-center">
-                                    <h5 className="sku">{sku || 'sku not available'}</h5>
-                                    <h5 className="type">{type}</h5>
-                                </div>
-                                <h5 className="mb-0">
-                                    {title} - <span className="price">{`${CURRENCY} ${price}`}</span>
-                                </h5>
-                                <div className="mt-0 mb-1">
-                                    {tags?.length ? (
-                                        _.map(tags, (tag, index) => (
-                                            <Badge color="pink" className="badge" key={`${title}-badge-${index + 1}`}>
-                                                {tag}
-                                            </Badge>
-                                        ))
-                                    ) : (
-                                        <Badge>NOT TAGGED YET</Badge>
-                                    )}
-                                </div>
-                                <h5 className="created-on">
-                                    Created on {moment(date).format('Do MMMM YYYY [at] h:mm A')}
-                                </h5>
-                            </div>
-                            <div>
-                                <div className="m-0 d-flex justify-content-between">
-                                    <div>
-                                        <FeatherIcons.ShoppingCart className="mr-1" /> {orders}{' '}
-                                        <FeatherIcons.Heart className="mx-1" /> {wishlist}
-                                    </div>
-                                    <div>
-                                        <FeatherIcons.Edit className="mr-2 button-icon" />
-                                        <FeatherIcons.Eye className="button-icon" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                ))
-            ) : (
-                <h4 className="text-center my-4">NO PRODUCTS AVAILABLE</h4>
-            )}
-        </Card>
-    );
+import { useQuery } from 'react-query';
+import { getProductsByCollection } from 'helpers/query';
+
+const Products = ({ extended, collection, isLoading }) => {
+    const products = useQuery(['productsByCollection', { id: collection?.id }], getProductsByCollection, {
+        enabled: false,
+    });
+
+    useEffect(() => {
+        if (extended) products.refetch();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [extended]);
+
+    if (products.error && !isLoading.value) {
+        isLoading.set(false);
+        return null;
+    }
+
+    if (products.isLoading) {
+        if (!isLoading.value) isLoading.set(true);
+        return null;
+    } else {
+        if (isLoading.value) isLoading.set(false);
+    }
+
+    return <DropdownPanel extended={extended} title={collection?.name} data={products?.data} />;
 };
 
 export default Products;
