@@ -2,7 +2,7 @@
 import React from 'react';
 import { Row, Col } from 'reactstrap';
 
-import StatisticsChartWidget from '../../components/StatisticsChartWidget';
+import StatisticsChartWidget from '../../../components/StatisticsChartWidget';
 
 const Statistics = () => {
     return (
@@ -16,7 +16,7 @@ const Statistics = () => {
                         trend={{
                             textClass: 'text-success',
                             icon: 'uil uil-arrow-up',
-                            value: '10.21%'
+                            value: '10.21%',
                         }}></StatisticsChartWidget>
                 </Col>
 
@@ -29,7 +29,7 @@ const Statistics = () => {
                         trend={{
                             textClass: 'text-danger',
                             icon: 'uil uil-arrow-down',
-                            value: '5.05%'
+                            value: '5.05%',
                         }}></StatisticsChartWidget>
                 </Col>
 
@@ -42,7 +42,7 @@ const Statistics = () => {
                         trend={{
                             textClass: 'text-success',
                             icon: 'uil uil-arrow-up',
-                            value: '25.16%'
+                            value: '25.16%',
                         }}></StatisticsChartWidget>
                 </Col>
 
@@ -55,7 +55,7 @@ const Statistics = () => {
                         trend={{
                             textClass: 'text-danger',
                             icon: 'uil uil-arrow-down',
-                            value: '5.05%'
+                            value: '5.05%',
                         }}></StatisticsChartWidget>
                 </Col>
             </Row>

@@ -2,31 +2,31 @@
 import jwtDecode from 'jwt-decode';
 import { Cookies } from 'react-cookie';
 
+export const setSession = (user) => {
+    let cookies = new Cookies();
+    if (user) cookies.set('user', user, { path: '/' });
+    else cookies.remove('user', { path: '/' });
+};
+
 /**
  * Checks if user is authenticated
  */
-const isUserAuthenticated = () => {
+export const isUserAuthenticated = () => {
     const user = getLoggedInUser();
-    if (!user) {
-        return false;
-    }
-    const decoded = jwtDecode(user.token);
-    const currentTime = Date.now() / 1000;
-    if (decoded.exp < currentTime) {
-        console.warn('access token expired');
-        return false;
-    } else {
-        return true;
-    }
+    if (!user) return false;
+    // const decoded = jwtDecode(user);
+    // const currentTime = Date.now() / 1000;
+    // console.log(decoded);
+    // if (decoded.exp < currentTime) return false;
+    return true;
 };
 
 /**
  * Returns the logged in user
  */
-const getLoggedInUser = () => {
+export const getLoggedInUser = () => {
     const cookies = new Cookies();
     const user = cookies.get('user');
-    return user ? (typeof user == 'object' ? user : JSON.parse(user)) : null;
+    if (!user) return null;
+    return jwtDecode(user);
 };
-
-export { isUserAuthenticated, getLoggedInUser };

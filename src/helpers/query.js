@@ -1,23 +1,17 @@
-import axios from 'axios';
 import { queryCache } from 'react-query';
-import { API_ENDPOINT } from '../constants';
 
-const api = axios.create({
-    baseURL: API_ENDPOINT,
-    timeout: 5000,
-    headers: {
-        'Content-Type': 'application/json',
-    },
-});
+import api from './api';
 
 export const collectionsCache = {
-    remove: () => queryCache.invalidateQueries(),
     review: {
         add: ({ queryKey, pageSize, collection }) => {
             let cached = queryCache.getQueryData(queryKey);
             const len = cached?.docs?.length || 0;
 
-            if (len >= pageSize) return;
+            if (len >= pageSize) {
+                queryCache.invalidateQueries(queryKey);
+                return;
+            }
 
             const newLength = len + 1;
             cached.docs.push({ ...collection, sr: newLength });
@@ -61,13 +55,16 @@ export const collectionsCache = {
         },
     },
     table: {
-        add: ({ queryKey, pageSize, collection }) => {
+        add: ({ queryKey, currentPage, pageSize, collection }) => {
             let cached = queryCache.getQueryData(queryKey);
             const len = cached?.docs?.length || 0;
 
-            if (len >= pageSize) return;
+            if (len >= pageSize) {
+                queryCache.invalidateQueries(queryKey);
+                return;
+            }
 
-            const newLength = len + 1;
+            const newLength = (currentPage - 1) * pageSize + len + 1;
             cached.docs.push({ ...collection, sr: newLength });
             queryCache.setQueryData(queryKey, cached);
         },
@@ -88,7 +85,7 @@ export const collectionsCache = {
 
             queryCache.setQueryData(queryKey, cached);
         },
-        remove: () => queryCache.invalidateQueries('collections'),
+        remove: (key) => queryCache.invalidateQueries(key),
     },
 };
 
@@ -98,7 +95,10 @@ export const getCollections = (key, params) => {
 
     return api.get(url).then((res) => {
         const { docs } = res.data;
-        const serializedDocs = docs.map((collection, index) => ({ ...collection, sr: index + 1 }));
+        const serializedDocs = docs.map((collection, index) => ({
+            ...collection,
+            sr: (params.page - 1) * params.pageSize + index + 1,
+        }));
         return { ...res.data, docs: serializedDocs };
     });
 };
@@ -107,3 +107,5 @@ export const getProductsByCollection = (key, params) => {
     if (params.id) return api.get(`/products/collection/${params.id}`).then((res) => res.data);
     return null;
 };
+
+export const getPerformingCollections = () => api.get(`/collections/performing`).then((res) => res.data);

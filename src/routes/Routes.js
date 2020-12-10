@@ -1,10 +1,11 @@
-import React, { Component } from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter, Switch } from 'react-router-dom';
 import Loadable from 'react-loadable';
-import { connect } from 'react-redux';
 
 import { isUserAuthenticated } from '../helpers/authUtils';
 import { allFlattenRoutes as routes } from './index';
+
+import { useSelector } from 'react-redux';
 
 // Lazy loading and code splitting -
 // Derieved idea from https://blog.logrocket.com/lazy-loading-components-in-react-16-6-6cea535c0b52
@@ -29,44 +30,36 @@ const VerticalLayout = Loadable({
     loading,
 });
 
-class Routes extends Component {
-    // returns the layout
-    getLayout = () => {
-        if (!isUserAuthenticated()) return AuthLayout;
+// returns the layout
+const getLayout = () => {
+    if (!isUserAuthenticated()) return AuthLayout;
 
-        return VerticalLayout;
-    };
-
-    render() {
-        const Layout = this.getLayout();
-
-        // rendering the router with layout
-        return (
-            <BrowserRouter>
-                <Layout {...this.props}>
-                    <Switch>
-                        {routes.map((route, index) => {
-                            return !route.children ? (
-                                <route.route
-                                    key={index}
-                                    path={route.path}
-                                    roles={route.roles}
-                                    exact={route.exact}
-                                    component={route.component}></route.route>
-                            ) : null;
-                        })}
-                    </Switch>
-                </Layout>
-            </BrowserRouter>
-        );
-    }
-}
-
-const mapStateToProps = (state) => {
-    return {
-        layout: state.Layout,
-        user: state.Auth.user,
-    };
+    return VerticalLayout;
 };
 
-export default connect(mapStateToProps, null)(Routes);
+const Routes = () => {
+    const state = useSelector((state) => state);
+    const Layout = getLayout();
+
+    // rendering the router with layout
+    return (
+        <BrowserRouter>
+            <Layout layout={state.Layout} user={state.Auth.user}>
+                <Switch>
+                    {routes.map((route, index) => {
+                        return !route.children ? (
+                            <route.route
+                                key={index}
+                                path={route.path}
+                                roles={route.roles}
+                                exact={route.exact}
+                                component={route.component}></route.route>
+                        ) : null;
+                    })}
+                </Switch>
+            </Layout>
+        </BrowserRouter>
+    );
+};
+
+export default Routes;

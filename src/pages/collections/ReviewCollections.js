@@ -4,20 +4,21 @@ import Loader, { Loader as ButtonLoader } from '../../components/Loader';
 import _ from 'lodash';
 import classnames from 'classnames';
 
-import Label from '../../components/Label';
-import DropdownPanel from '../../components/DropdownPanel';
+import Label from 'components/Label';
 import { ArrowLeft, ArrowRight, Trash } from 'react-feather';
 import TooltipContainer from 'react-tooltip';
-import api from '../../helpers/api';
+import api from 'helpers/api';
 import { useDispatch } from 'react-redux';
-import * as stateActions from '../../redux/stateActions';
-import ErrorDialog from '../../components/ErrorDialog';
+import * as stateActions from 'redux/stateActions';
+import ErrorDialog from 'components/ErrorDialog';
 
 import { queryCache, usePaginatedQuery, useQuery } from 'react-query';
 import { getCollections, getProductsByCollection } from 'helpers/query';
 import { CollectionsContext } from 'helpers/context';
 import { collectionsCache } from 'helpers/query';
 import Products from './Products';
+import usePagination from 'helpers/pagination';
+import { Else, If, Then, Unless, When } from 'react-if';
 const ReviewCollections = (props) => {
     const { reviewContext, tableContext } = useContext(CollectionsContext);
     const dispatch = useDispatch();
@@ -46,6 +47,8 @@ const ReviewCollections = (props) => {
     // show products panel or not (triggered by click on collection)
     const [isDropdownPanel, setIsDropdownPanel] = useState(false);
 
+    const reviewPagination = usePagination({ context: reviewContext, data: collections.resolvedData });
+
     const setIsLoading = useMemo(() => ({ value: isLoadingProducts, set: setIsLoadingProducts }), [
         isLoadingProducts,
         setIsLoadingProducts,
@@ -56,7 +59,6 @@ const ReviewCollections = (props) => {
         ({ _id, title }) => {
             props.setBlackOverlay(true);
             setIsDropdownPanel(true);
-            // productsByCollection.remove();
             if (currentCollection?.id === _id) {
                 setCurrentCollection({ id: null, name: null });
                 props.setBlackOverlay(false);
@@ -94,13 +96,13 @@ const ReviewCollections = (props) => {
         productsByCollection.refetch(currentCollection.id);
     }, [collections, productsByCollection, currentCollection]);
 
-    const handleDeleteCollections = async () => {
+    const handleDeleteCollections = useCallback(async () => {
         setIsDeletingCollections(true);
         try {
             await api.delete('/collections');
 
-            // collections.remove();
-            collectionsCache.remove();
+            collections.remove();
+            collectionsCache.table.remove(tableContext.queryKey);
 
             dispatch(
                 stateActions.createToast({
@@ -119,76 +121,75 @@ const ReviewCollections = (props) => {
                     message: 'Cannot delete collections: ' + toastError,
                 })
             );
-            console.error(error);
-        } finally {
-            setIsDeletingCollections(false);
         }
-    };
-
-    const isFirstPage = () => reviewContext.currentPage.value <= 1;
-    const isLastPage = () => reviewContext.currentPage.value >= collections.resolvedData?.pages;
-
-    const handlePageChange = (type) => {
-        if (type === 'decrement') {
-            if (!isFirstPage()) {
-                reviewContext.currentPage.decrement();
-            }
-            return;
-        }
-
-        if (!isLastPage()) {
-            reviewContext.currentPage.increment();
-        }
-    };
-
-    // useEffect(queryCache.removeQueries, []);
-
-    useEffect(() => {
-        // queryCache.getQuery(['collections', { page: 1, pageSize: 2 }]).remove();
-        console.log(queryCache.getQueries());
-    }, []);
+        setIsDeletingCollections(false);
+    }, [dispatch]);
 
     return (
         <Col xl={6}>
             <div className="position-relative">
                 <Card>
                     {/* is loading initially or additional data is not fetched then show loader  */}
-                    {(collections.isLoading ||
-                        isLoadingProducts ||
-                        (!collections.isFetched && collections.resolvedData)) && <Loader />}
+                    <When
+                        condition={
+                            collections.isLoading ||
+                            isLoadingProducts ||
+                            (!collections.isFetched && collections.resolvedData)
+                        }>
+                        <Loader />
+                    </When>
                     <CardBody
                         className={classnames('card--review', {
                             'd-flex flex-column align-items-center justify-content-center': !(
                                 collections.resolvedData?.docs?.length || collections.error
                             ),
                         })}>
-                        {collections.resolvedData?.docs?.length ? (
-                            <React.Fragment>
+                        <If condition={collections.resolvedData?.docs?.length}>
+                            <Then>
                                 <div className="d-flex justify-content-between">
                                     <h4 className="mb-3">Review Collections</h4>
-                                    {!isDeletingCollections ? (
-                                        <div className="d-flex align-items-center">
-                                            <ArrowLeft
-                                                className={classnames('button-icon', { disabled: isFirstPage() })}
-                                                onClick={() => handlePageChange('decrement')}
-                                            />
-                                            <span className="mx-1">
-                                                Page {reviewContext.currentPage.value} of{' '}
-                                                {collections.resolvedData?.pages}
-                                            </span>
-                                            <ArrowRight
-                                                className={classnames('button-icon', { disabled: isLastPage() })}
-                                                onClick={() => handlePageChange('increment')}
-                                            />
-                                            <Trash
-                                                onClick={handleDeleteCollections}
-                                                className="button-icon"
-                                                data-tip="Delete all collections"
-                                            />
-                                        </div>
-                                    ) : (
-                                        <ButtonLoader color="dark" />
-                                    )}
+                                    <If condition={isDeletingCollections}>
+                                        <Then>
+                                            <ButtonLoader color="dark" />
+                                        </Then>
+                                        <Else>
+                                            <div className="d-flex align-items-center">
+                                                <Unless
+                                                    condition={
+                                                        reviewPagination.currentPage === 1 &&
+                                                        reviewPagination.pages === 1
+                                                    }>
+                                                    <ArrowLeft
+                                                        className={classnames('button-icon', {
+                                                            disabled: reviewPagination.isFirstPage,
+                                                        })}
+                                                        onClick={reviewPagination.decrementPage}
+                                                    />
+                                                    <span className="mx-1">
+                                                        {`Page ${reviewPagination.currentPage} of ${reviewPagination.pages}`}
+                                                    </span>
+                                                    <ArrowRight
+                                                        className={classnames('button-icon', {
+                                                            disabled: reviewPagination.isLastPage,
+                                                        })}
+                                                        onClick={reviewPagination.incrementPage}
+                                                    />
+                                                </Unless>
+                                                <If condition={isDeletingCollections}>
+                                                    <Then>
+                                                        <ButtonLoader color="dark" />
+                                                    </Then>
+                                                    <Else>
+                                                        <Trash
+                                                            onClick={handleDeleteCollections}
+                                                            className="button-icon"
+                                                            data-tip="Delete all collections"
+                                                        />
+                                                    </Else>
+                                                </If>
+                                            </div>
+                                        </Else>
+                                    </If>
                                     <TooltipContainer place="left" type="dark" effect="solid" />
                                 </div>
                                 <ErrorDialog
@@ -216,15 +217,21 @@ const ReviewCollections = (props) => {
                                             />
                                         ))}
                                 </div>
-                            </React.Fragment>
-                        ) : collections.error ? (
-                            <ErrorDialog error={collections.error} onRetry={collections.refetch} />
-                        ) : (
-                            <React.Fragment>
-                                <h5 className="text-center mb-1">No collections recorded!</h5>
-                                <h5 className="text-center mt-0">Create new collections to review them.</h5>
-                            </React.Fragment>
-                        )}
+                            </Then>
+                            <Else>
+                                <If condition={collections.error}>
+                                    <Then>
+                                        <ErrorDialog error={collections.error} onRetry={collections.refetch} />
+                                    </Then>
+                                    <Else>
+                                        <React.Fragment>
+                                            <h5 className="text-center mb-1">No collections recorded!</h5>
+                                            <h5 className="text-center mt-0">Create new collections to review them.</h5>
+                                        </React.Fragment>
+                                    </Else>
+                                </If>
+                            </Else>
+                        </If>
                     </CardBody>
                 </Card>
 

@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { API_ENDPOINT } from '../constants';
+import { getLoggedInUser } from './authUtils';
 
 /**
  * Fetch data from given url
@@ -25,7 +26,10 @@ export const fetchJSON = (url, options = {}) => {
 const api = axios.create({
     baseURL: API_ENDPOINT,
     timeout: 5000,
-    headers: { 'X-Auth-Token': 'foobar' },
+    headers: {
+        'Content-Type': 'application/json',
+        'X-Auth-Token': getLoggedInUser(),
+    },
 });
 
 export default api;

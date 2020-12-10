@@ -1,4 +1,5 @@
 [data-component='CollectionsTable'] {
+    min-height: $card-min-height;
     .button-icon {
         cursor: pointer;
         transition: opacity 300ms ease;

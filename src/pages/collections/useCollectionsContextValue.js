@@ -2,15 +2,16 @@ import { useState } from 'react';
 
 const CollectionsContext = () => {
     const [reviewCurrentPage, setReviewCurrentPage] = useState(1);
-    const [reviewPageSize, setReviewPageSize] = useState(5);
+    const [reviewPageSize, setReviewPageSize] = useState(25);
 
     const [tableCurrentPage, setTableCurrentPage] = useState(1);
-    const [tablePageSize, setTablePageSize] = useState(15);
+    const [tablePageSize, setTablePageSize] = useState(5);
 
     return {
         reviewContext: {
             currentPage: {
                 value: reviewCurrentPage,
+                set: setReviewCurrentPage,
                 increment: () => setReviewCurrentPage((prevState) => prevState + 1),
                 decrement: () => setReviewCurrentPage((prevState) => prevState - 1),
             },
@@ -28,6 +29,7 @@ const CollectionsContext = () => {
         tableContext: {
             currentPage: {
                 value: tableCurrentPage,
+                set: setTableCurrentPage,
                 increment: () => setTableCurrentPage((prevState) => prevState + 1),
                 decrement: () => setTableCurrentPage((prevState) => prevState - 1),
             },

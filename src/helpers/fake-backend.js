@@ -1,7 +1,7 @@
 export function configureFakeBackend() {
     let users = [{ id: 1, username: 'test', password: 'test', firstName: 'Test', lastName: 'User', role: 'Admin' }];
     let realFetch = window.fetch;
-    window.fetch = function(url, opts) {
+    window.fetch = function (url, opts) {
         return new Promise((resolve, reject) => {
             // wrap in timeout to simulate server api call
             setTimeout(() => {
@@ -11,7 +11,7 @@ export function configureFakeBackend() {
                     let params = JSON.parse(opts.body);
 
                     // find if any user matches login credentials
-                    let filteredUsers = users.filter(user => {
+                    let filteredUsers = users.filter((user) => {
                         return user.username === params.username && user.password === params.password;
                     });
 
@@ -40,8 +40,13 @@ export function configureFakeBackend() {
                     // get parameters from post request
                     let params = JSON.parse(opts.body);
 
+                    console.log('params', params);
+
                     // add new users
-                    let { firstName, lastName } = params.fullname.split(' ');
+                    const fullName = params.fullname.split(' ');
+
+                    let firstName = fullName[0];
+                    let lastName = fullName[1];
                     let newUser = {
                         id: users.length + 1,
                         username: firstName,
@@ -71,7 +76,7 @@ export function configureFakeBackend() {
                     let params = JSON.parse(opts.body);
 
                     // find if any user matches login credentials
-                    let filteredUsers = users.filter(user => {
+                    let filteredUsers = users.filter((user) => {
                         return user.username === params.username;
                     });
 
@@ -105,7 +110,7 @@ export function configureFakeBackend() {
                 }
 
                 // pass through any requests not handled above
-                realFetch(url, opts).then(response => resolve(response));
+                realFetch(url, opts).then((response) => resolve(response));
             }, 500);
         });
     };

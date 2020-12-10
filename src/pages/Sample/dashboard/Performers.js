@@ -9,11 +9,11 @@ import {
     DropdownToggle,
 } from 'reactstrap';
 
-import avatarImg1 from '../../assets/images/users/avatar-1.jpg';
-import avatarImg4 from '../../assets/images/users/avatar-4.jpg';
-import avatarImg5 from '../../assets/images/users/avatar-5.jpg';
-import avatarImg7 from '../../assets/images/users/avatar-7.jpg';
-import avatarImg9 from '../../assets/images/users/avatar-9.jpg';
+import avatarImg1 from '../../../assets/images/users/avatar-1.jpg';
+import avatarImg4 from '../../../assets/images/users/avatar-4.jpg';
+import avatarImg5 from '../../../assets/images/users/avatar-5.jpg';
+import avatarImg7 from '../../../assets/images/users/avatar-7.jpg';
+import avatarImg9 from '../../../assets/images/users/avatar-9.jpg';
 
 const Member = ({ image, name, description, className }) => {
     return (

@@ -1,19 +1,21 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import { Row, Col, Card } from 'reactstrap';
-import _ from 'lodash';
 import classnames from 'classnames';
 
-import PageTitle from '../../components/PageTitle';
+import PageTitle from 'components/PageTitle';
 
-import performingBg from '../../assets/images/collections/performing-bg.jpg';
+import performingBg from 'assets/images/collections/performing-bg.jpg';
 
 import CreateCollection from './CreateCollection';
 import CollectionsTable from './CollectionsTable';
-import BlackOverlay from '../../components/BlackOverlay';
+import BlackOverlay from 'components/BlackOverlay';
 
 import ReviewCollections from './ReviewCollections';
 import { CollectionsContext } from 'helpers/context';
 import useCollectionsContextValue from './useCollectionsContextValue';
+import PerformingCollections from './PerformingCollections';
+
+import TooltipContainer from 'react-tooltip';
 
 const Collections = () => {
     const [areProductsByCollectionExtended, setAreProductsByCollectionExtended] = useState(false);
@@ -32,16 +34,22 @@ const Collections = () => {
                 </Row>
                 <Row>
                     <Col xl={6}>
-                        <Card className="card--performing">
+                        <Card className="card--manage">
                             <img alt="Performing Collections" src={performingBg} />
                             <div className="overlay" />
                             <div className="content">
-                                <h1>Performing Collections</h1>
+                                <h1>Collections</h1>
                             </div>
                         </Card>
                     </Col>
 
                     <ReviewCollections setBlackOverlay={setAreProductsByCollectionExtended} />
+                </Row>
+
+                <Row>
+                    <Col xl={12}>
+                        <PerformingCollections />
+                    </Col>
                 </Row>
 
                 <Row>
@@ -53,6 +61,7 @@ const Collections = () => {
                     </Col>
                 </Row>
             </div>
+            <TooltipContainer place="left" type="dark" effect="solid" />
         </CollectionsContext.Provider>
     );
 };

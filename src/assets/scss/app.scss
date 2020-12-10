@@ -110,6 +110,14 @@ File: Main Css File
 /* 23. Authentication */
 @import 'custom/pages/authentication';
 
+.flex-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+}
+
 .feedback {
     width: 100%;
     margin-top: 0.25rem;
@@ -133,21 +141,21 @@ File: Main Css File
     justify-content: center;
 }
 
-.card--performing {
+.card--manage {
     img,
     .overlay {
         border-radius: 0.25rem;
     }
 
     img {
-        height: $performing-height;
+        height: $card-min-height;
         object-fit: cover;
         object-position: center;
     }
 
     .overlay {
         width: 100%;
-        height: $performing-height;
+        height: $card-min-height;
         background-image: linear-gradient(to bottom right, rgba(232, 67, 147, 0.25), rgba(253, 149, 199, 1)),
             linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 1));
         position: absolute;
@@ -160,10 +168,86 @@ File: Main Css File
         top: 0;
         left: 0;
         width: 100%;
-        height: $performing-height;
+        height: $card-min-height;
         display: flex;
         justify-content: center;
         align-items: center;
+
+        h1 {
+            font-weight: bold;
+            color: white;
+            text-align: center;
+        }
+    }
+}
+
+.card--performing {
+    width: 100%;
+    height: $card-min-height;
+    position: relative;
+
+    .overlay {
+        position: absolute;
+        border-radius: 0.25rem;
+    }
+
+    .images-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        display: flex;
+        width: 100%;
+        height: 100%;
+    }
+
+    .image-container {
+        flex: 1;
+        position: relative;
+        .overlay {
+            cursor: pointer;
+            z-index: 1;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background-color: black;
+            opacity: 0;
+            transition: opacity 200ms ease-in-out;
+
+            &:hover {
+                opacity: 0.25;
+            }
+        }
+        img {
+            width: 100%;
+            height: 100%;
+            border-radius: 0.25rem;
+            object-fit: cover;
+            object-position: center;
+        }
+    }
+
+    .overlay {
+        width: 100%;
+        height: 100%;
+        background-image: linear-gradient(to bottom right, rgba(45, 194, 140, 0.25), rgb(67, 211, 158)),
+            linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 1));
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+
+    .content {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: $card-min-height;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 3;
+        pointer-events: none;
 
         h1 {
             font-weight: bold;
@@ -181,20 +265,25 @@ File: Main Css File
         flex-wrap: wrap;
         gap: 1rem;
     }
+}
 
-    .button-icon {
-        cursor: pointer;
-        transition: opacity 300ms ease;
+.button-icon {
+    cursor: pointer;
+    transition: opacity 300ms ease;
 
-        &.disabled {
-            cursor: not-allowed;
-            opacity: 0.2;
-        }
-    }
-
-    .button-icon:hover {
+    &.disabled {
+        cursor: not-allowed;
         opacity: 0.2;
     }
+}
+
+.button-icon:hover {
+    opacity: 0.2;
+}
+
+.vertical-align {
+    display: inline-block;
+    vertical-align: middle;
 }
 
 @import 'custom/components/custom/collections.scss';

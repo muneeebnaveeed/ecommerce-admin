@@ -1,4 +1,6 @@
 [data-component='CreateCollection'] {
+    min-height: $card-min-height;
+
     .submit-button {
         margin-top: 0.5rem;
     }

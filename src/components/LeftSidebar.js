@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
 
@@ -11,6 +11,9 @@ import * as FeatherIcon from 'react-feather';
 
 import AppMenu from './AppMenu';
 import profilePic from '../assets/images/users/avatar-7.jpg';
+import { getLoggedInUser } from 'helpers/authUtils';
+
+const user = getLoggedInUser();
 
 /**
  * User Widget
@@ -19,12 +22,12 @@ const UserProfile = () => {
     return (
         <React.Fragment>
             <div className="media user-profile mt-2 mb-2">
-                <img src={profilePic} className="avatar-sm rounded-circle mr-2" alt="Muneeb Naveed" />
-                <img src={profilePic} className="avatar-xs rounded-circle mr-2" alt="Muneeb Naveed" />
+                <img src={profilePic} className="avatar-sm rounded-circle mr-2" alt={user.fullName} />
+                <img src={profilePic} className="avatar-xs rounded-circle mr-2" alt={user.fullName} />
 
                 <div className="media-body">
-                    <h6 className="pro-user-name mt-0 mb-0">Muneeb Naveed</h6>
-                    <span className="pro-user-desc">Developer</span>
+                    <h6 className="pro-user-name mt-0 mb-0">{user.fullName || 'Username'}</h6>
+                    <span className="pro-user-desc">{user.role || 'Developer'}</span>
                 </div>
 
                 <UncontrolledDropdown className="align-self-center profile-dropdown-menu">
